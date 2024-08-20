@@ -57,7 +57,7 @@ func (h *ReceiptHandler) GetReceiptsIdPoints(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	response := GetReceiptsIdPointsResponse{
-		Points: h.RuleProcessor.TotalPoints(receipt),
+		Points: h.RuleProcessor.Points(receipt),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

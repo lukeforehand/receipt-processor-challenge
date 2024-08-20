@@ -22,23 +22,17 @@ import (
 //	}
 type Rule func(r Receipt) int
 
-// Points is a method for the Rule type. It allows instances of Rule to
-// be used as if they were functions with the signature func(r Receipt) int.
-func (rule Rule) Points(receipt Receipt) int {
-	return rule(receipt)
-}
-
 // RuleProcessor uses rules to determine the total points earned from a receipt
 type RuleProcessor struct {
 	// rules contains each Rule function for determining total points
 	rules []Rule
 }
 
-// TotalPoints sums the earned points from all rules for a given Receipt
-func (p *RuleProcessor) TotalPoints(receipt Receipt) int {
+// Points sums the earned points from all rules for a given Receipt
+func (p *RuleProcessor) Points(receipt Receipt) int {
 	total := 0
 	for _, rule := range p.rules {
-		total += rule.Points(receipt)
+		total += rule(receipt)
 	}
 	return total
 }
