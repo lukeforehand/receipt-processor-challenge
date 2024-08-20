@@ -16,9 +16,10 @@
 
 ## Notes
 
-- docker compose to ease local development
+- generated server with `oapi-codegen`
+- `docker compose` to ease local development
 - docker image size is minimized to the go static binary
-- /health endpoint for liveness probes
+- `/health` endpoint for liveness probes
 - assuming SSL termination at the load balancer
 - assuming an authentication proxy so no auth middleware
 
