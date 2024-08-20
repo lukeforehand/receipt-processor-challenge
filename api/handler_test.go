@@ -1,3 +1,6 @@
+/*
+handler_test.go contains functions for testing Receipt handlers.
+*/
 package api
 
 import (
@@ -13,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestReceiptHandlers verifies the behavior of ReceiptHandler functions.
+// It checks that the receipt handlers work correctly in various scenarios.
 func TestReceiptHandlers(t *testing.T) {
 	assert.Equal(t, 28, GetReceiptPoints(t, `{
 		"retailer": "Target",
@@ -60,6 +65,9 @@ func TestReceiptHandlers(t *testing.T) {
 	}`))
 }
 
+// GetReceiptPoints posts a Receipt json and fetches the points earned.
+// receipt: a json representation of Receipt
+// Returns: the points earned for the given receipt
 func GetReceiptPoints(t *testing.T, receipt string) (points int) {
 
 	handler := NewReceiptHandler()
