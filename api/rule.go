@@ -1,5 +1,5 @@
 /*
-rule.go contains methods for calculating the total earned points for a Receipt
+rule.go contains methods for calculating the points earned from a Receipt
 */
 package api
 
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Rule is a function type that calculates the earned points for a given Receipt.
+// Rule is a function type that calculates the points earned from a given Receipt.
 //
 // Example usage:
 //
@@ -22,7 +22,7 @@ import (
 //	}
 type Rule func(r Receipt) int
 
-// RuleProcessor uses rules to determine the total points earned from a receipt
+// RuleProcessor uses rules to determine the points earned from a receipt
 type RuleProcessor struct {
 	// rules contains each Rule function for determining total points
 	rules []Rule
@@ -30,11 +30,11 @@ type RuleProcessor struct {
 
 // Points sums the earned points from all rules for a given Receipt
 func (p *RuleProcessor) Points(receipt Receipt) int {
-	total := 0
+	points := 0
 	for _, rule := range p.rules {
-		total += rule(receipt)
+		points += rule(receipt)
 	}
-	return total
+	return points
 }
 
 // NewRuleProcessor initializes a RuleProcessor, defining all the rules for
