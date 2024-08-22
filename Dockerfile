@@ -1,20 +1,28 @@
-## Build Stage
-FROM golang:1.23-alpine AS build
-
+## Build Base
+FROM golang:1.23-alpine AS base
 WORKDIR /app
-
-# Download module dependencies
 COPY go.mod go.sum ./
 RUN go mod download
-
-# Build static binary
 COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server -ldflags="-s -w"
+
+## Build api binary
+FROM base AS api-binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server -ldflags="-s -w" ./cmd/api
 RUN chmod +x server
 
-## Create a tiny image
-FROM scratch
-
-COPY --from=build /app/server /server
+## Build api
+FROM scratch AS api
+COPY --from=api-binary /app/server /server
 EXPOSE 8080
+ENTRYPOINT ["/server"]
+
+## Build backend binary
+FROM base AS backend-binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server -ldflags="-s -w" ./cmd/backend
+RUN chmod +x server
+
+## Build backend
+FROM scratch AS backend
+COPY --from=backend-binary /app/server /server
+EXPOSE 8081
 ENTRYPOINT ["/server"]

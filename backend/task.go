@@ -1,41 +1,43 @@
 package backend
 
 import (
-	"context"
 	"log"
-
-	"github.com/redis/go-redis/v9"
+	"os"
+	"receiptprocessor/api"
 )
-
-var ctx = context.Background()
 
 // ReceiptProcessor pops a UUID and Receipt from the task broker
 type ReceiptProcessor struct {
-	// pointer to a redis client used as a backend broker
-	redis *redis.Client
-	// TODO :Database
+	queue api.RedisQueue
+	// TODO: Database
 }
 
+// NewReceiptProcessor initializes NewReceiptProcessor with defaults
 func NewReceiptProcessor() ReceiptProcessor {
 	return ReceiptProcessor{
-		redis: NewRedisClient(),
+		queue: api.NewRedisQueue(os.Getenv("RECEIPT_QUEUE")),
 	}
 }
 
-func (t *ReceiptProcessor) Start() {
+// Start starts the ReceiptProcessor worker
+func (p *ReceiptProcessor) Start() {
 	for {
-		tasks, err := t.redis.BRPop(ctx, 0, RECEIPT_TASK_QUEUE).Result()
-		if err != nil {
-			log.Fatalf("Error retrieving tasks: %v", err)
-		}
-		err = t.processTask(tasks[1])
-		if err != nil {
-			log.Fatalf("Failed to process task: %v", err)
+		tasks, err := p.queue.Dequeue()
+		if len(tasks) > 1 {
+			if err != nil {
+				log.Fatalf("Error retrieving tasks: %v", err)
+			}
+			err = p.processTask(tasks[1])
+			if err != nil {
+				log.Fatalf("Failed to process task: %v", err)
+			}
 		}
 	}
 }
 
+// processTask processes each receipt in the queue
 func (t *ReceiptProcessor) processTask(task string) error {
 	// TODO: store receipt in database
+	log.Printf("Processing task: %v", task)
 	return nil
 }
