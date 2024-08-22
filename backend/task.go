@@ -26,7 +26,7 @@ func NewReceiptProcessor() ReceiptProcessor {
 	}
 }
 
-// Start starts the ReceiptProcessor worker
+// Start the ReceiptProcessor worker
 func (r *ReceiptProcessor) Start() {
 	for {
 		task, err := r.queue.Dequeue()

@@ -37,8 +37,8 @@ func NewReceiptQueue(name string) ReceiptQueue {
 // Enqueue puts a id/Receipt to the back of the queue
 // id: the uuid string associated with a Receipt
 // Returns: the Receipt for the given id
-func (r ReceiptQueue) Enqueue(id string, receipt Receipt) error {
-	value, _ := json.Marshal(&receipt)
+func (r ReceiptQueue) Enqueue(values ...string) error {
+	value, _ := json.Marshal(values)
 	return r.client.LPush(r.ctx, r.name, value).Err()
 }
 
