@@ -18,9 +18,9 @@ import (
 // of points earned for a Receipt
 type ReceiptHandler struct {
 	// queue is the receipt task queue
-	queue RedisQueue
+	queue ReceiptQueue
 	// database is the receipt storage
-	database Database
+	database ReceiptDatabase
 	// ruleProcessor processes a receipt to determine points earned
 	ruleProcessor RuleProcessor
 }
@@ -28,8 +28,8 @@ type ReceiptHandler struct {
 // NewReceiptHandler initializes ReceiptHandler with defaults
 func NewReceiptHandler() ReceiptHandler {
 	return ReceiptHandler{
-		queue:         NewRedisQueue(os.Getenv("RECEIPT_QUEUE")),
-		database:      Database{},
+		queue:         NewReceiptQueue(os.Getenv("RECEIPT_QUEUE")),
+		database:      NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE")),
 		ruleProcessor: NewRuleProcessor(),
 	}
 }
@@ -41,7 +41,7 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 	id := uuid.New()
 	receipt, _ := io.ReadAll(r.Body)
 	// queue task
-	err := h.queue.Enqueue(id, receipt)
+	err := h.queue.Enqueue(id.String(), string(receipt))
 	if err != nil {
 		log.Fatalf("Failed to queue task: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -58,7 +58,7 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 // Response example: {"points":31}
 func (h *ReceiptHandler) GetReceiptsIdPoints(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	receipt, err := h.database.GetReceipt(id)
+	receipt, err := h.database.Get(id)
 	if err != nil {
 		http.Error(w, "Receipt not found", http.StatusNotFound)
 		return
