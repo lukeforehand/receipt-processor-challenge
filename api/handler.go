@@ -4,27 +4,35 @@ handler.go contains methods for handling receipt requests
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"receiptprocessor/backend"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
+
+var ctx = context.Background()
 
 // ReceiptHandler handles the access of stored receipts, and the calculation
 // of points earned for a Receipt
 type ReceiptHandler struct {
-	// Database is the receipt storage
-	Database Database
-	// RuleProcessor processes a receipt to determine points earned
-	RuleProcessor RuleProcessor
+	// pointer to a redis client used as a backend broker
+	redis *redis.Client
+	// database is the receipt storage
+	database Database
+	// ruleProcessor processes a receipt to determine points earned
+	ruleProcessor RuleProcessor
 }
 
 // NewReceiptHandler initializes ReceiptHandler with defaults
 func NewReceiptHandler() ReceiptHandler {
 	return ReceiptHandler{
-		Database:      Database{},
-		RuleProcessor: NewRuleProcessor(),
+		redis:         backend.NewRedisClient(),
+		database:      Database{},
+		ruleProcessor: NewRuleProcessor(),
 	}
 }
 
@@ -38,7 +46,14 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	id := uuid.New()
-	h.Database.PutReceipt(id.String(), receipt)
+
+	// queue task
+	err := h.redis.LPush(ctx, backend.RECEIPT_TASK_QUEUE, id, receipt).Err()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	response := PostReceiptsProcessResponse{
 		Id: id.String(),
 	}
@@ -51,13 +66,13 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 // Response example: {"points":31}
 func (h *ReceiptHandler) GetReceiptsIdPoints(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	receipt, err := h.Database.GetReceipt(id)
+	receipt, err := h.database.GetReceipt(id)
 	if err != nil {
 		http.Error(w, "Receipt not found", http.StatusNotFound)
 		return
 	}
 	response := GetReceiptsIdPointsResponse{
-		Points: h.RuleProcessor.Points(receipt),
+		Points: h.ruleProcessor.Points(receipt),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

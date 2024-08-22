@@ -1,14 +1,14 @@
-package main
+package api
 
 import (
+	"fmt"
 	"net/http"
-	"receiptprocessor/api"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func main() {
+func Serve(port int) {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	// Health check
@@ -17,12 +17,12 @@ func main() {
 	})
 	// API Routes
 	router.Mount("/receipts", ReceiptRoutes())
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 }
 
 func ReceiptRoutes() chi.Router {
 	router := chi.NewRouter()
-	handler := api.NewReceiptHandler()
+	handler := NewReceiptHandler()
 	router.Post("/process", handler.PostReceiptsProcess)
 	router.Get("/{id}/points", handler.GetReceiptsIdPoints)
 	return router
