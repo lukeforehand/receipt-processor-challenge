@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
 // TestReceiptValidation
@@ -198,7 +199,15 @@ func TestReceiptValidation(t *testing.T) {
 // TestReceiptHandlers verifies the behavior of ReceiptHandler functions.
 // It checks that the receipt handlers work correctly in various scenarios.
 func TestReceiptHandlers(t *testing.T) {
-	assert.Equal(t, 28, GetReceiptPoints(t, `{
+
+	ctx := context.Background()
+	redisContainer, _ := redis.Run(ctx, "redis:latest")
+	defer redisContainer.Terminate(ctx)
+
+	port, _ := redisContainer.MappedPort(ctx, "6379")
+	handler := NewReceiptHandler(port.Port())
+
+	assert.Equal(t, 28, GetReceiptPoints(t, handler, `{
 		"retailer": "Target",
 		"purchaseDate": "2022-01-01",
 		"purchaseTime": "13:01",
@@ -211,7 +220,7 @@ func TestReceiptHandlers(t *testing.T) {
 		],
 		"total": "35.35"
 	}`))
-	assert.Equal(t, 109, GetReceiptPoints(t, `{
+	assert.Equal(t, 109, GetReceiptPoints(t, handler, `{
 		"retailer": "M&M Corner Market",
 		"purchaseDate": "2022-03-20",
 		"purchaseTime": "14:33",
@@ -223,7 +232,7 @@ func TestReceiptHandlers(t *testing.T) {
 		],
 		"total": "9.00"
 	}`))
-	assert.Equal(t, 15, GetReceiptPoints(t, `{
+	assert.Equal(t, 15, GetReceiptPoints(t, handler, `{
 		"retailer": "Walgreens",
 		"purchaseDate": "2022-01-02",
 		"purchaseTime": "08:13",
@@ -233,7 +242,7 @@ func TestReceiptHandlers(t *testing.T) {
 			{"shortDescription": "Dasani", "price": "1.40"}
 		]
 	}`))
-	assert.Equal(t, 31, GetReceiptPoints(t, `{
+	assert.Equal(t, 31, GetReceiptPoints(t, handler, `{
 		"retailer": "Target",
 		"purchaseDate": "2022-01-02",
 		"purchaseTime": "13:13",
@@ -259,11 +268,10 @@ func ProcessRequest(router chi.Router, request *http.Request) *httptest.Response
 }
 
 // GetReceiptPoints posts a Receipt json and fetches the points earned.
+// handler: ReceiptHandler
 // receipt: a json representation of Receipt
 // Returns: the points earned for the given receipt
-func GetReceiptPoints(t *testing.T, receipt string) (points int) {
-
-	handler := NewReceiptHandler()
+func GetReceiptPoints(t *testing.T, handler ReceiptHandler, receipt string) (points int) {
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/process", strings.NewReader(receipt))

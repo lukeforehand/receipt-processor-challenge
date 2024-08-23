@@ -25,12 +25,12 @@ type ReceiptQueue struct {
 }
 
 // NewReceiptQueue initializes ReceiptQueue with defaults
-func NewReceiptQueue(name string) ReceiptQueue {
+func NewReceiptQueue(name string, port string) ReceiptQueue {
 	return ReceiptQueue{
 		ctx:  context.Background(),
 		name: name,
 		client: redis.NewClient(&redis.Options{
-			Addr: fmt.Sprintf("%s:6379", os.Getenv("REDIS_HOST")),
+			Addr: fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), port),
 		}),
 	}
 }

@@ -40,7 +40,7 @@ func ReceiptRoutes() chi.Router {
 	// request validator
 	spec, _ := GetSwagger()
 	router.Use(oapimiddleware.OapiRequestValidator(spec))
-	handler := NewReceiptHandler()
+	handler := NewReceiptHandler("")
 	router.Post("/process", handler.PostReceiptsProcess)
 	router.Get("/{id}/points", handler.GetReceiptsIdPoints)
 	return router
