@@ -35,7 +35,7 @@ Install pocket load tester
 
 ```bash
   
-  plt --live-ui --duration=20s --rate-limit=60 curl -X POST "http://localhost:8080/receipts/process" -d'{
+  plt --live-ui --duration=20s --rate-limit=60 curl -H "Content-Type:application/json" -X POST "http://localhost:8080/receipts/process" -d'{
     "retailer": "Target",
     "purchaseDate": "2022-01-02",
     "purchaseTime": "13:13",

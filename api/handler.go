@@ -6,6 +6,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -37,6 +38,14 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	// validate purchaseTime
+	_, err := time.Parse("15:04", receipt.PurchaseTime)
+	if err != nil {
+		http.Error(w, "Invalid purchaseTime", http.StatusBadRequest)
+		return
+	}
+
 	id := uuid.New()
 	h.Database.PutReceipt(id.String(), receipt)
 	response := PostReceiptsProcessResponse{
