@@ -24,12 +24,12 @@ type ReceiptDatabase struct {
 }
 
 // NewReceiptDatabase initializes ReceiptDatabase with defaults
-func NewReceiptDatabase(namespace string, port string) ReceiptDatabase {
+func NewReceiptDatabase(namespace string) ReceiptDatabase {
 	return ReceiptDatabase{
 		ctx:       context.Background(),
 		namespace: namespace,
 		client: redis.NewClient(&redis.Options{
-			Addr: fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), port),
+			Addr: fmt.Sprintf("%s:6379", os.Getenv("REDIS_HOST")),
 		}),
 	}
 }

@@ -26,13 +26,10 @@ type ReceiptHandler struct {
 }
 
 // NewReceiptHandler initializes ReceiptHandler with defaults
-func NewReceiptHandler(port string) ReceiptHandler {
-	if port == "" {
-		port = "6379"
-	}
+func NewReceiptHandler() ReceiptHandler {
 	return ReceiptHandler{
-		queue:         NewReceiptQueue(os.Getenv("RECEIPT_QUEUE"), port),
-		database:      NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE"), port),
+		queue:         NewReceiptQueue(os.Getenv("RECEIPT_QUEUE")),
+		database:      NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE")),
 		ruleProcessor: NewRuleProcessor(),
 	}
 }

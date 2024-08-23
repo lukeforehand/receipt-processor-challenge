@@ -20,13 +20,10 @@ type ReceiptProcessor struct {
 }
 
 // NewReceiptProcessor initializes NewReceiptProcessor with defaults
-func NewReceiptProcessor(port string) ReceiptProcessor {
-	if port == "" {
-		port = "6379"
-	}
+func NewReceiptProcessor() ReceiptProcessor {
 	return ReceiptProcessor{
-		queue:    api.NewReceiptQueue(os.Getenv("RECEIPT_QUEUE"), port),
-		database: api.NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE"), port),
+		queue:    api.NewReceiptQueue(os.Getenv("RECEIPT_QUEUE")),
+		database: api.NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE")),
 	}
 }
 

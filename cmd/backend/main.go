@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	processor := backend.NewReceiptProcessor("")
+	processor := backend.NewReceiptProcessor()
 	processor.Start()
 }
