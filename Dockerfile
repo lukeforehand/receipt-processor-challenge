@@ -16,5 +16,7 @@ RUN chmod +x server
 FROM scratch
 
 COPY --from=build /app/server /server
+COPY --from=build /app/api.yml /api.yml
+COPY --from=build /app/static /static
 EXPOSE 8080
 ENTRYPOINT ["/server"]
