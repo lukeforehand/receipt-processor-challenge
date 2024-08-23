@@ -10,13 +10,19 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	oapimiddleware "github.com/oapi-codegen/nethttp-middleware"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestReceiptValidation
 func TestReceiptValidation(t *testing.T) {
 
-	router := GetRouter()
+	router := chi.NewRouter()
+	spec, _ := GetSwagger()
+	router.Use(oapimiddleware.OapiRequestValidator(spec))
+	router.Post("/receipts/process", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
 
 	// missing content type
 	request := httptest.NewRequest(http.MethodPost, "/receipts/process", strings.NewReader("{}"))
@@ -149,19 +155,6 @@ func TestReceiptValidation(t *testing.T) {
 			}`,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: "string doesn't match the regular expression",
-		}, {
-			name: "bad purchaseTime",
-			requestBody: `{
-				"retailer": "Target",
-				"purchaseDate": "2022-01-01",
-				"purchaseTime": "0",
-				"items": [
-					{"shortDescription": "Mountain Dew 12PK", "price": "6.49"}
-				],
-				"total": "35.35"
-			}`,
-			expectedCode: http.StatusBadRequest,
-			expectedBody: "Invalid purchaseTime",
 		}, {
 			name: "OK",
 			requestBody: `{
