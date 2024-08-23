@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -8,8 +9,8 @@ import (
 	oapimiddleware "github.com/oapi-codegen/nethttp-middleware"
 )
 
-func Serve() {
-	http.ListenAndServe(":8080", GetRouter())
+func Serve(port int) {
+	http.ListenAndServe(fmt.Sprintf(":%d", port), GetRouter())
 }
 
 func GetRouter() chi.Router {

@@ -5,7 +5,9 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -15,17 +17,20 @@ import (
 // ReceiptHandler handles the access of stored receipts, and the calculation
 // of points earned for a Receipt
 type ReceiptHandler struct {
-	// Database is the receipt storage
-	Database Database
-	// RuleProcessor processes a receipt to determine points earned
-	RuleProcessor RuleProcessor
+	// queue is the receipt task queue
+	queue ReceiptQueue
+	// database is the receipt storage
+	database ReceiptDatabase
+	// ruleProcessor processes a receipt to determine points earned
+	ruleProcessor RuleProcessor
 }
 
 // NewReceiptHandler initializes ReceiptHandler with defaults
 func NewReceiptHandler() ReceiptHandler {
 	return ReceiptHandler{
-		Database:      Database{},
-		RuleProcessor: NewRuleProcessor(),
+		queue:         NewReceiptQueue(os.Getenv("RECEIPT_QUEUE")),
+		database:      NewReceiptDatabase(os.Getenv("RECEIPT_DATABASE")),
+		ruleProcessor: NewRuleProcessor(),
 	}
 }
 
@@ -47,26 +52,31 @@ func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Requ
 	}
 
 	id := uuid.New()
-	h.Database.PutReceipt(id.String(), receipt)
-	response := PostReceiptsProcessResponse{
-		Id: id.String(),
+	// queue task
+	err = h.queue.Enqueue(id, receipt)
+	if err != nil {
+		log.Fatalf("Failed to queue task: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(PostReceiptsProcessResponse{
+		Id: id.String(),
+	})
 }
 
 // GetReceiptsIdPoints handles GET requests to get points earned for a Receipt
 // Response example: {"points":31}
 func (h *ReceiptHandler) GetReceiptsIdPoints(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	receipt, err := h.Database.GetReceipt(id)
+	receipt, err := h.database.Get(id)
 	if err != nil {
 		http.Error(w, "Receipt not found", http.StatusNotFound)
 		return
 	}
 	response := GetReceiptsIdPointsResponse{
-		Points: h.RuleProcessor.Points(receipt),
+		Points: h.ruleProcessor.Points(receipt),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
