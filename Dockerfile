@@ -13,6 +13,8 @@ RUN chmod +x server
 ## Build api
 FROM scratch AS api
 COPY --from=api-binary /app/server /server
+COPY --from=api-binary /app/api.yml /api.yml
+COPY --from=api-binary /app/static /static
 EXPOSE 8080
 ENTRYPOINT ["/server"]
 

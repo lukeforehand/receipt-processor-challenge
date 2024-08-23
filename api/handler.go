@@ -5,10 +5,10 @@ package api
 
 import (
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -38,10 +38,22 @@ func NewReceiptHandler() ReceiptHandler {
 // storing the Receipt along with an associated UUID
 // Response example: {"id":"7d4d837b-ef5e-47c0-89a9-889657b66eb9"}
 func (h *ReceiptHandler) PostReceiptsProcess(w http.ResponseWriter, r *http.Request) {
+	var receipt Receipt
+	if err := json.NewDecoder(r.Body).Decode(&receipt); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// validate purchaseTime
+	_, err := time.Parse("15:04", receipt.PurchaseTime)
+	if err != nil {
+		http.Error(w, "Invalid purchaseTime", http.StatusBadRequest)
+		return
+	}
+
 	id := uuid.New()
-	receipt, _ := io.ReadAll(r.Body)
 	// queue task
-	err := h.queue.Enqueue(id.String(), string(receipt))
+	err = h.queue.Enqueue(id, receipt)
 	if err != nil {
 		log.Fatalf("Failed to queue task: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

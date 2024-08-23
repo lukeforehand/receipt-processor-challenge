@@ -38,7 +38,7 @@ func NewReceiptDatabase(namespace string) ReceiptDatabase {
 // id: the uuid string associated with a Receipt
 // Returns: the Receipt for the given id
 func (r ReceiptDatabase) Get(id string) (Receipt, error) {
-	key := fmt.Sprintf("%s:%s", r.namespace, id)
+	key := fmt.Sprintf("%s:%s", id, r.namespace)
 	data, err := r.client.Get(r.ctx, key).Result()
 	if err != nil {
 		return Receipt{}, err
@@ -53,6 +53,6 @@ func (r ReceiptDatabase) Get(id string) (Receipt, error) {
 // receipt: the Receipt to store
 func (r ReceiptDatabase) Set(id string, receipt Receipt) error {
 	value, _ := json.Marshal(&receipt)
-	key := fmt.Sprintf("%s:%s", r.namespace, id)
+	key := fmt.Sprintf("%s:%s", id, r.namespace)
 	return r.client.Set(r.ctx, key, value, 0).Err()
 }

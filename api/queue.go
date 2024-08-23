@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -34,22 +35,33 @@ func NewReceiptQueue(name string) ReceiptQueue {
 	}
 }
 
+// ReceiptMessage for the queue
+type ReceiptMessage struct {
+	// UUID
+	Id uuid.UUID
+	// Receipt
+	Receipt Receipt
+}
+
 // Enqueue puts a id/Receipt to the back of the queue
-// id: the uuid string associated with a Receipt
+// id: the uuid associated with a Receipt
 // Returns: the Receipt for the given id
-func (r ReceiptQueue) Enqueue(values ...string) error {
-	value, _ := json.Marshal(values)
+func (r ReceiptQueue) Enqueue(id uuid.UUID, receipt Receipt) error {
+	value, _ := json.Marshal(ReceiptMessage{
+		Id:      id,
+		Receipt: receipt,
+	})
 	return r.client.LPush(r.ctx, r.name, value).Err()
 }
 
 // Dequeue gets a id/Receipt from the front of the queue
-// Returns: slice of id/Receipt serialized as a string
-func (r ReceiptQueue) Dequeue() ([]string, error) {
+// Returns: id, receipt, error
+func (r ReceiptQueue) Dequeue() (uuid.UUID, Receipt, error) {
 	data, err := r.client.BRPop(r.ctx, 0, r.name).Result()
 	if err != nil {
-		return []string{}, err
+		return uuid.UUID{}, Receipt{}, err
 	}
-	var values []string
-	err = json.Unmarshal([]byte(data[1]), &values)
-	return values, err
+	var message ReceiptMessage
+	err = json.Unmarshal([]byte(data[1]), &message)
+	return message.Id, message.Receipt, err
 }
