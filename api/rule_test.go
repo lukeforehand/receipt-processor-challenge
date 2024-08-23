@@ -64,13 +64,13 @@ func TestRuleProcessor(t *testing.T) {
 		{
 			points: 31,
 			receipt: `{
-               "retailer": "Target",
-               "purchaseDate": "2022-01-02",
-               "purchaseTime": "13:13",
-               "total": "1.25",
-               "items": [
-                       {"shortDescription": "Pepsi - 12-oz", "price": "1.25"}
-               ]
+				"retailer": "Target",
+				"purchaseDate": "2022-01-02",
+				"purchaseTime": "13:13",
+				"total": "1.25",
+				"items": [
+					{"shortDescription": "Pepsi - 12-oz", "price": "1.25"}
+				]
        		}`,
 		},
 	}
