@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-// TestReceiptHandlers verifies the behavior of ReceiptHandler functions.
-// It checks that the receipt handlers work correctly in various scenarios.
+// TestRuleProcessor verifies the behavior of RuleProcessor functions.
+// It checks that the receipt points are correct in various scenarios.
 func TestRuleProcessor(t *testing.T) {
 
 	tests := []struct {
